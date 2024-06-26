@@ -1,0 +1,2 @@
+# journal
+Smart journal
