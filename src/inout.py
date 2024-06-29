@@ -1,0 +1,36 @@
+""" I.O
+Handling user input and output
+"""
+
+from time import sleep
+
+
+def prompt(message: str) -> str:
+    """
+    Taking user input
+    :param message: prompt message
+    :return: str, valid user input
+    """
+    ans = ""
+    while not ans:
+        try:
+            ans = input(f"{message} ")
+        except KeyboardInterrupt as _:
+            break
+        except EOFError as _:
+            break
+    return ans
+
+
+def stream(message: str, chunk_size=3, delay=0.1) -> None:
+    """
+    Printing the message 3 characters at a time
+    :param message : text message to print be printed
+    :param chunk_size : size of each chunk
+    :param delay (float)
+    :return: None
+    """
+    n = len(message)
+    for i in range(0, n, chunk_size):
+        print(message[i:i+chunk_size], end="", flush=True)
+        sleep(delay)

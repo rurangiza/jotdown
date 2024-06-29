@@ -4,7 +4,7 @@ INTERPRETER := python
 all: run
 
 run:
-	$(INTERPRETER) $(NAME).py
+	@$(INTERPRETER) $(NAME).py
 
 init:
 	pip install -r requirements.txt

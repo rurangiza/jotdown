@@ -1,26 +1,18 @@
 """ Imports """
-from logger import Logger as Log
 
-""" Configurations """
+from inout import prompt, stream
+
 
 """ Code """
 
-
-def prompt(message: str, expected_input=str) -> str:
-    ans = ""
-    try:
-        while not ans:
-            ans = input(f"{message}: ")
-        Log.info(ans)
-        return ans
-    except KeyboardInterrupt as _:
-        Log.warning("exited: Ctrl^C pressed")
-    except EOFError as _:
-        Log.warning("exited: Ctrl^D pressed")
-
-
 def main():
-    prompt("Enter something")
+    print("How was your day?")
+    entry = []
+    while "i'm done!" != (ans := prompt("...")):
+        entry.append(ans)
+
+    print("----- your entry ----")
+    stream("\n".join(entry))
 
 
 """ Execution """
