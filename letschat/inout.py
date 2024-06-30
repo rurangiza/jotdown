@@ -2,7 +2,6 @@
 
 from time import sleep
 
-
 def prompt(message: str) -> str:
     """
     Taking user input
@@ -14,8 +13,7 @@ def prompt(message: str) -> str:
     count = 2
     while not ans:
         if count == 0:
-            print("Soft exit")
-            break
+            raise EOFError
         try:
             ans = input(f"{message} ")
         except KeyboardInterrupt as _:
@@ -37,3 +35,5 @@ def stream(message: str, chunk_size=3, delay=0.1) -> None:
     for i in range(0, n, chunk_size):
         print(message[i:i+chunk_size], end="", flush=True)
         sleep(delay)
+    print("")
+
