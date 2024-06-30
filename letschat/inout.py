@@ -1,6 +1,4 @@
-""" I.O
-Handling user input and output
-"""
+""" Handling user input and output """
 
 from time import sleep
 
@@ -8,23 +6,28 @@ from time import sleep
 def prompt(message: str) -> str:
     """
     Taking user input
+    --
     :param message: prompt message
     :return: str, valid user input
     """
     ans = ""
+    count = 2
     while not ans:
+        if count == 0:
+            print("Soft exit")
+            break
         try:
             ans = input(f"{message} ")
         except KeyboardInterrupt as _:
             break
-        except EOFError as _:
-            break
+        count -= 1
     return ans
 
 
 def stream(message: str, chunk_size=3, delay=0.1) -> None:
     """
     Printing the message 3 characters at a time
+    --
     :param message : text message to print be printed
     :param chunk_size : size of each chunk
     :param delay (float)
