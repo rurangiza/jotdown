@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from letschat.inout import stream, prompt
+from jotdown.inout import stream, prompt
 from io import StringIO
 import pytest
 

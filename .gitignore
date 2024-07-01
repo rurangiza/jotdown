@@ -126,7 +126,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-letschat/.env
+jotdown/.env
 .venv
 env/
 venv/

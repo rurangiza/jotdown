@@ -2,10 +2,10 @@ import setuptools
 
 setuptools.setup(
     include_package_data=True,
-    name='letschat',
+    name='jotdown',
     version='0.1',
     description='journaling tool for coders',
-    url='https://github.com/rurangiza/letschat',
+    url='https://github.com/rurangiza/jotdown',
     author='Arsene Rurangiza',
     author_email='a.rurangiza@gmail.com',
     packages=setuptools.find_packages(),
