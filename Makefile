@@ -1,24 +1,33 @@
 
-INTERPRETER := python3
-CURRENT_DIR := $(shell pwd)
+# name
+ENTRYPOINT := main
 
+# directories
+CURRENT_DIR := $(shell pwd)
+SRC_DIR := letschat
+
+
+# variables
+INTERPRETER := python3
+
+# commands
 export PYTHONPATH := $(CURRENT_DIR)
 
-all: build
 
-init: .init_done
+# rules
+all: run
 
-.init_done:
-	touch .init_done
+run:
+	@$(INTERPRETER) $(SRC_DIR)/$(ENTRYPOINT).py
 
-build: init
-	@$(INTERPRETER) letschat/app.py
+test:
+	@pytest
 
-test: init
-	@$(INTERPRETER) tests/test_stream.py
+install:
+	pip install -r requirements.txt
 
-dev:
+req:
+	pip freeze > requirements.txt
+	# pip show <module_name>
 
-
-clean:
-	rm -rf .init_done
+.PHONY: all run test install req

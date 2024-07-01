@@ -37,3 +37,14 @@ def stream(message: str, chunk_size=3, delay=0.1) -> None:
         sleep(delay)
     print("")
 
+
+def loader():
+    animation = ['⣾', '⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽']
+    idx = 0
+    while True:
+        print(animation[idx % len(animation)], end="\r")
+        idx += 1
+        sleep(0.1)
+
+def greet():
+    print("Hello, World!")
