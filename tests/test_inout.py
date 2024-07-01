@@ -3,6 +3,7 @@ from letschat.inout import stream, prompt
 from io import StringIO
 import pytest
 
+
 class TestStream:
 
 
