@@ -4,7 +4,7 @@ ENTRYPOINT := main
 
 # directories
 CURRENT_DIR := $(shell pwd)
-SRC_DIR := letschat
+SRC_DIR := jotdown
 
 
 # variables
