@@ -2,6 +2,7 @@
 
 from time import sleep
 
+
 def prompt(message: str) -> str:
     """
     Taking user input
@@ -13,11 +14,8 @@ def prompt(message: str) -> str:
     count = 2
     while not ans:
         if count == 0:
-            raise EOFError
-        try:
-            ans = input(f"{message} ")
-        except KeyboardInterrupt as _:
-            break
+            return "#soft-exit#"
+        ans = input(f"{message} ")
         count -= 1
     return ans
 
