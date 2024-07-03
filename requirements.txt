@@ -5,3 +5,4 @@ langchain-community>=0.2.6
 pinecone-client>=4.1.1
 pytest>=8.2.2
 faiss-cpu>=1.8.0.post1
+#windows-curses>=2.3.3
