@@ -51,6 +51,6 @@ User Experience
 
 
 #### Useful Links
-- Terms: [LLM](https://youtu.be/zjkBMFhNj_g?si=9AeYiS8D-dtSxyjK), system message, prompt, context window, [embeddings](https://platform.openai.com/docs/guides/embeddings?lang=python), vector database ([1](https://www.pinecone.io/learn/vector-database/, [2](https://python.langchain.com/v0.2/docs/integrations/vectorstores/pinecone/)), search (similarity, hybrid...)
+- Terms: [LLM](https://youtu.be/zjkBMFhNj_g?si=9AeYiS8D-dtSxyjK), system message, prompt, context window, [embeddings](https://platform.openai.com/docs/guides/embeddings?lang=python), vector database ([1](https://www.pinecone.io/learn/vector-database/), [2](https://python.langchain.com/v0.2/docs/integrations/vectorstores/pinecone/)), search (similarity, hybrid...)
 - Function calling: [Langchain](https://python.langchain.com/v0.1/docs/modules/model_io/chat/function_calling/)
 - Conversational Memory: [Doc](https://python.langchain.com/v0.1/docs/use_cases/chatbots/memory_management/), [video](https://www.youtube.com/watch?v=X05uK0TZozM)
