@@ -7,8 +7,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.schema.document import Document
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores.pinecone import Pinecone
+from langchain_community.vectorstores.faiss import FAISS
 from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.chains import create_retrieval_chain
 
 from datetime import datetime
 from typing import List
@@ -115,21 +116,7 @@ class Librarian(LLM):
         Context: {context}
         Question: {input}
         """)
-        self.__db = None
-        self.__tmpdoc = []
-        pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-        index_name = "docs-quickstart-index"
-
-        if index_name not in pc.list_indexes().names():
-            pc.create_index(
-                name=index_name,
-                dimension=2,
-                metric="cosine",
-                spec=ServerlessSpec(
-                    cloud='aws',
-                    region='us-east-1'
-                )
-            )
+        self.__vector_store = None
 
     def __text_to_doc(self, text):
         """ Turns text into a document """
@@ -141,13 +128,12 @@ class Librarian(LLM):
                 'category': ['thoughts', 'ideas'], # TODO: should be dynamic
             }
         )
-        self.__tmpdoc.append(document)
         return document
 
     def __create_db(self, docs):
         """ Turns document into embeddings """
         embedding = OpenAIEmbeddings()
-        self.__db = Pinecone.from_documents([docs], embedding)
+        self.__vector_store = FAISS.from_documents([docs], embedding=embedding)
 
     def __create_chain(self):
         # chain = self.__template | self._llm
@@ -156,7 +142,13 @@ class Librarian(LLM):
             llm=self._llm,
             prompt=self.__template
         )
-        return chain
+        # retrieve must relevant document in vector store
+        retriever = self.__vector_store.as_retriever()
+        retrieval_chain = create_retrieval_chain(
+            retriever,
+            chain
+        )
+        return retrieval_chain
 
     def store(self, text):
         # turn text into document
@@ -166,11 +158,10 @@ class Librarian(LLM):
 
     def retrieve(self, question):
         chain = self.__create_chain()
-        return chain.invoke({
-            'input': question,
-            'context': self.__tmpdoc
+        response = chain.invoke({
+            "input": question
         })
-
+        return response
 
 if __name__ == '__main__':
     llm = LLM()
