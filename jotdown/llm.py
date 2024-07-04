@@ -13,72 +13,65 @@ from langchain.chains import create_retrieval_chain
 
 from datetime import datetime
 from typing import List
+import curses
+
 from jotdown.inout import prompt, stream
 
 GPT3 = "gpt-3.5-turbo-0125"
 GPT4 = "gpt-4o"
 
+
 class LLM:
-    def __init__(self, model=GPT3, temperature=0.2):
+    """
+    Parent class of every more specialized LLM classes
+    - Scribe
+    - Librarian
+    """
+    tokens_count = 0
+    openai_calls = 0
+
+    def __init__(self, model=GPT3, temperature=0.2) -> None:
         self._llm = ChatOpenAI(
             model=model,
             temperature=temperature,
         )
         self._template = ChatPromptTemplate.from_template("""{prompt}""")
 
-    def ask(self, prompt):
+    def ask(self, question: str) -> str:
         chain = self._template | self._llm
-        response = chain.invole({'prompt': prompt})
-        return response.content
-
-
-class Cleaner(LLM):
-    """
-    The cleaner helps clean journal entries while keeping the original
-    meaning of the notes.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.__system = """
-        You are an advanced note-cleaning assistant. Your task is to help me clean and organize my notes while preserving the original information. Specifically:
-        
-        Remove any repetition or redundant information.
-        Ensure clarity by rephrasing sentences if needed, while keeping the original meaning intact.
-        Correct any spelling or grammatical errors.
-        Maintain the original structure and context of the notes.
-        Summarize long paragraphs without losing key details, if necessary.
-        Highlight important points for easy reference.
-
-        Respond in the third person, restating the content of the notes without additional commentary.
-        For example, if the input is 'hello, world', the output should be similar to 'You wrote "hello, world"'. If the input is 'I went to school, shared a meal with some friends then started working', the output should be similar to 'You went to school, shared a meal with friends then started working'.
-        if the input includes a question like 'who is elon musk', the output should be similar to 'you asked yourself who elon musk is'
-        Do not directly quote my notes!
-        """
-        self.__template = ChatPromptTemplate.from_messages(
-            [
-                ("system", "{system}"),
-                ("human", "note to clean: {text}"),
-            ]
-        )
-    
-    def clean(self, text: str) -> str:
-        chain = self.__template | self._llm
-        response = chain.invoke({
-            'system': self.__system,
-            'text': text,
-        })
+        response = chain.invole({'prompt': question})
         return response.content
 
 
 class Scribe(LLM):
-    def __init__(self):
+    """
+    Records and cleans notes
+    """
+    def __init__(self) -> None:
         super().__init__()
         self.__MIN_WORDS = 20
+        self.__system_msg = """\
+        You are a note-cleaning assistant. Your goal is to clean the text below delimited by triple backticks.
+        By cleaning I specifically mean:\
+        - Correct any spelling or grammatical errors.\
+        - Ensure clarity by rephrasing sentences if needed, while keeping the original meaning intact.\
+        - Maintain the original structure and context of the notes.\
+
+        The note: ```{context}```
+        """
+        self.__template = ChatPromptTemplate.from_messages(
+            [
+                ("system", self.__system_msg),
+                ("human", "{prompt}")
+            ]
+        )
 
     def record(self):
-        ############################################
-        # Get the note
+        """ Get user input in curse window """
+        header = curses.newwin()
+
+    def record_old(self) -> str:
+        """ Get user input """
         user_input: List[str] = []
         word_count: int = 0
         try:
@@ -97,19 +90,24 @@ class Scribe(LLM):
             pass
         note: str = "\n".join(user_input)
         stream(f"You've written {word_count} words")
+
         # do something: clean, summarize or other
-
-        # Summarize it using chatGPT
-
         if not note:
             return ""
-        return note
+        return self.__clean(note)
+
+    def __clean(self, note: str) -> str:
+        """ Cleans note while maintaining original meaning """
+        chain = self.__template | self._llm
+        response = chain.invoke({"prompt": note})
+        return response.content
+
 
 class Librarian(LLM):
     """
     The Librarian stores and retrieves notes based on user needs
     """
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.__template = ChatPromptTemplate.from_template("""
         Answer the user's question:
@@ -118,7 +116,7 @@ class Librarian(LLM):
         """)
         self.__vector_store = None
 
-    def __text_to_doc(self, text):
+    def __text_to_doc(self, text: str) -> Document:
         """ Turns text into a document """
         # Metadata: date, time, tags, category
         document = Document(
@@ -130,13 +128,13 @@ class Librarian(LLM):
         )
         return document
 
-    def __create_db(self, docs):
+    def __create_db(self, docs: Document) -> None:
         """ Turns document into embeddings """
         embedding = OpenAIEmbeddings()
         self.__vector_store = FAISS.from_documents([docs], embedding=embedding)
 
-    def __create_chain(self):
-        # chain = self.__template | self._llm
+    def __create_chain(self):  # TODO: what return type?
+        # same as: chain = template | llm
         # pass list of documents into the chain
         chain = create_stuff_documents_chain(
             llm=self._llm,
@@ -150,18 +148,18 @@ class Librarian(LLM):
         )
         return retrieval_chain
 
-    def store(self, text):
+    def store(self, text: str) -> None:
         # turn text into document
         docs = self.__text_to_doc(text)
         self.__create_db(docs)
-        return docs
 
-    def retrieve(self, question):
+    def retrieve(self, question: str) -> str:
         chain = self.__create_chain()
         response = chain.invoke({
             "input": question
         })
         return response
+
 
 if __name__ == '__main__':
     llm = LLM()

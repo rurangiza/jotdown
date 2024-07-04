@@ -1,7 +1,7 @@
 """ Imports """
 
 from inout import prompt, stream
-from llm import Cleaner, Scribe, Librarian
+from llm import Scribe, Librarian
 
 from typing import List
 
@@ -13,7 +13,7 @@ from typing import List
 
 def main():
 
-    cleaner, scribe, librarian = Cleaner(), Scribe(), Librarian()
+    scribe, librarian = Scribe(), Librarian()
 
     while True:
         res = input("Would you like to 'write' a note or 'chat'? ")
@@ -31,8 +31,7 @@ def main():
             In my free time I play Mario Card, share drinks, watch movies
             and also produce music in my home studio at Ghlin. 
             """
-            doc = librarian.store(note)
-            print(">> Stored this document:\n", doc)
+            librarian.store(note)
 
 
 """ Execution """
