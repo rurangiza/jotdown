@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import List
 import curses
 
-from jotdown.inout import prompt, stream
+from jotdown.inout import prompt, stream, TextArea, WordCounter
 
 GPT3 = "gpt-3.5-turbo-0125"
 GPT4 = "gpt-4o"
@@ -66,9 +66,26 @@ class Scribe(LLM):
             ]
         )
 
-    def record(self):
+    def record(self, stdscr, target_words=10):
         """ Get user input in curse window """
-        header = curses.newwin()
+        stdscr.clear()
+
+        wc = WordCounter(target_words)
+        area = TextArea()
+
+        stdscr.nodelay(True)
+
+        text = ""
+
+        while wc <= target_words:
+            wc.display()
+            character = area.get()
+            text += character
+            area.print(character)
+            if character.isspace():
+                wc += 1
+        stdscr.getch()
+        return text
 
     def record_old(self) -> str:
         """ Get user input """
@@ -110,8 +127,8 @@ class Librarian(LLM):
     def __init__(self) -> None:
         super().__init__()
         self.__template = ChatPromptTemplate.from_template("""
-        Answer the user's question:
-        Context: {context}
+        Answer the user's question in a concise and confident way, based on the context given below and your knowledge.
+        Context: ```{context}```
         Question: {input}
         """)
         self.__vector_store = None
@@ -152,6 +169,7 @@ class Librarian(LLM):
         # turn text into document
         docs = self.__text_to_doc(text)
         self.__create_db(docs)
+        print("Finished storing the note.")
 
     def retrieve(self, question: str) -> str:
         chain = self.__create_chain()

@@ -2,6 +2,7 @@
 import curses
 import time
 from curses import wrapper
+from curses.textpad import Textbox, rectangle
 from time import sleep
 
 
@@ -40,6 +41,7 @@ class CurseWindow:
         if isinstance(text, int):
             text = chr(text)
         self._window.addstr(text)
+        self._window.refresh()
 
     def get(self) -> chr:
         ascii_character = self._window.getch()
@@ -62,23 +64,49 @@ class TextArea(CurseWindow):
     Type text one letter at a time and display it on screen
     one after the other
     """
-    def __init__(self):
-        super().__init__(15, 100, 3, 2)
+    def __init__(self, height=15, width=100, begin_y=3, begin_x=2):
+        super().__init__(height, width, begin_y, begin_x)
+        self.__box = Textbox(self._window)
+        # rectangle(stdscr, 1, 1, height - 1, width - 1)
+
+    # def edit(self) -> None:
+    #     self.__box.edit()
+    #
+    # def gather(self) -> str:
+    #     return self.__box.gather().strip()
+
+# class CustomTextbox(Textbox):
+#     def __init__(self, win):
+#         super().__init__(win)
+#         self.char_count = 0
+#
+#     def do_command(self, ch):
+#         # Handle backspace (ASCII 8 or 127)
+#         if ch in (curses.KEY_BACKSPACE, 127):
+#             if self.char_count > 0:
+#                 self.char_count -= 1
+#         # Handle printable characters including space
+#         elif 32 <= ch <= 126:
+#             self.char_count += 1
+#         # Let Textbox handle the character
+#         super().do_command(ch)
+#         # Refresh the window to display updated content
+#         self.win.refresh()
 
 
 class WordCounter(CurseWindow):
     """
     Show word counter header and increment when I type
     """
-    def __init__(self, target: int):
-        super().__init__(1, 20, 1, 2)
+    def __init__(self, target: int, height=1, width=20, begin_y=1, begin_x=2):
+        super().__init__(height=1, width=40, begin_y=1, begin_x=2)
         self._word_count = 0
+        self._char_count = 0
         self._target_word_count = target
 
     def display(self):
         self.clear()
         self.print(f'{self._word_count}/{self._target_word_count} words')
-        self.refresh()
 
     def __iadd__(self, other: int):
         self._word_count += other
@@ -87,6 +115,21 @@ class WordCounter(CurseWindow):
     def __isub__(self, other: int):
         self._word_count -= other
         return self
+
+    def __gt__(self, other):
+        return self._word_count > other
+
+    def __lt__(self, other):
+        return self._word_count < other
+
+    def __eq__(self, other):
+        return self._word_count == other
+
+    def __ge__(self, other):
+        return self._word_count >= other
+
+    def __le__(self, other):
+        return self._word_count <= other
 
     def __str__(self):
         return f"""
@@ -146,27 +189,25 @@ def loader():
         sleep(0.1)
 
 
-def record(stdscr):
-    # scribe.record()
-    stdscr.clear()
-
-    target = 40
-    hud = WordCounter(target)
-    area = TextArea()
-
-    while target > 0:
-        hud.clear()
-        hud.display()
-        hud.refresh()
-
-        character = area.get()
-        area.print(character)
-        area.refresh()
-
-        if character.isspace():
-            hud += 1
-            target -= 1
-
+# def test(stdscr):
+#     w = curses.newwin(3, 18, 2, 2)
+#     box = CustomTextbox(w)
+#     rectangle(stdscr, 1, 1, 5, 20)
+#     text = ""
+#
+#     while box.char_count < 20:
+#         stdscr.refresh()
+#         box.edit()
+#         res = box.gather()
+#         text += res
+#         stdscr.addstr(10, 20, f"{text}")
+#
+#     stdscr.getch()
+#     stream(text)
+#
+# wrapper(test)
 
 if __name__ == "__main__":
-    wrapper(record)
+    # record()
+    pass
+
