@@ -1,7 +1,9 @@
 """ Imports """
+import time
 
 from inout import prompt, stream
-from llm import Cleaner, Scribe, Librarian
+from llm import Scribe, Librarian
+from curses import wrapper
 
 from typing import List
 
@@ -13,7 +15,7 @@ from typing import List
 
 def main():
 
-    cleaner, scribe, librarian = Cleaner(), Scribe(), Librarian()
+    scribe, librarian = Scribe(), Librarian()
 
     while True:
         res = input("Would you like to 'write' a note or 'chat'? ")
@@ -23,16 +25,11 @@ def main():
                 stream(response['answer'])
             exit(0)
         else:
-            # note = Scribe.record()
-            note = """
-            A little about myself
-            my favorite anime is One Piece and my favourite character
-            is Zoro. In terms of music, I enjoy Hiphop & RnB.
-            In my free time I play Mario Card, share drinks, watch movies
-            and also produce music in my home studio at Ghlin. 
-            """
-            doc = librarian.store(note)
-            print(">> Stored this document:\n", doc)
+            note = wrapper(scribe.record)
+            time.sleep(1)
+            stream(note)
+            librarian.store(note)
+
 
 
 """ Execution """
