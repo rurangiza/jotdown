@@ -40,6 +40,10 @@ If you pick `chat`. Ask a question about your notes:
 - RAG
 
 ## To-do's (v1)
+Fixes
+- [ ] vdb: add notes instead of replacing
+
+Features
 - [x] take user input and output in streams (chunks of text)
 - [x] add minimum word requirements
 - [x] convert note to document, with metadata like daytime, content tags,..
@@ -53,7 +57,7 @@ Enhancements
 - [ ] use local db instead of in-memory db
 - [ ] add automated testing (pytest, mypy, github actions)
 - [ ] add class attributes to monitor token usage and api calls to openai
-- [ ] support additional context (ex: notion pages)
+- [ ] support additional context (ex: notion pages, personal files)
 
 User Experience
 - [ ] use curses for better UX
