@@ -1,7 +1,7 @@
 """ Imports """
 import time
 
-from inout import prompt, stream
+from inout import prompt, stream, TextEditor
 from llm import Scribe, Librarian
 from curses import wrapper
 
@@ -18,16 +18,15 @@ def main():
     scribe, librarian = Scribe(), Librarian()
 
     while True:
-        res = input("Would you like to 'write' a note or 'chat'? ")
-        if res == "chat":
+        pick = wrapper(TextEditor.option_menu)
+        if pick == "chat":
+            print("What would you like to know?")
             while (question := prompt(": ")) != "exit!":
                 response = librarian.retrieve(question)
                 stream(response['answer'])
             exit(0)
         else:
-            note = wrapper(scribe.record)
-            time.sleep(1)
-            stream(note)
+            note = scribe.record()
             librarian.store(note)
 
 

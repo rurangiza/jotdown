@@ -14,8 +14,9 @@ from langchain.chains import create_retrieval_chain
 from datetime import datetime
 from typing import List
 import curses
+from curses import wrapper
 
-from jotdown.inout import prompt, stream, TextArea, WordCounter
+from jotdown.inout import prompt, stream, TextEditor, WordCounter, CurseWindow
 
 GPT3 = "gpt-3.5-turbo-0125"
 GPT4 = "gpt-4o"
@@ -66,26 +67,11 @@ class Scribe(LLM):
             ]
         )
 
-    def record(self, stdscr, target_words=10):
+    def record(self):
         """ Get user input in curse window """
-        stdscr.clear()
-
-        wc = WordCounter(target_words)
-        area = TextArea()
-
-        stdscr.nodelay(True)
-
-        text = ""
-
-        while wc <= target_words:
-            wc.display()
-            character = area.get()
-            text += character
-            area.print(character)
-            if character.isspace():
-                wc += 1
-        stdscr.getch()
-        return text
+        ted = CurseWindow()
+        note = wrapper(ted.input)
+        return note
 
     def record_old(self) -> str:
         """ Get user input """
@@ -169,7 +155,6 @@ class Librarian(LLM):
         # turn text into document
         docs = self.__text_to_doc(text)
         self.__create_db(docs)
-        print("Finished storing the note.")
 
     def retrieve(self, question: str) -> str:
         chain = self.__create_chain()
