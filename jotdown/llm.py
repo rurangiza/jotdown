@@ -155,7 +155,6 @@ class Librarian(LLM):
         # turn text into document
         docs = self.__text_to_doc(text)
         self.__create_db(docs)
-        print("Finished storing the note.")
 
     def retrieve(self, question: str) -> str:
         chain = self.__create_chain()

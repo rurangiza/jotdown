@@ -25,10 +25,16 @@ class CurseWindow:
         self._win_texteditor = None
         self._win_counter = None
 
-    def input(self, stdscr):
-        self._MAX_LINES = curses.LINES - 1
-        self._MAX_COLS = curses.COLS - 1
+    def input(self, stdscr) -> str:
+        # variables
+        MAX_LINES = curses.LINES - 1
+        MAX_COLS = curses.COLS - 1
+        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
+        GREEN = curses.color_pair(2)
+        RED = curses.color_pair(3)
 
+        # init windows
         stdscr.clear()
         self._win_texteditor = curses.newwin(
             self._height,
@@ -42,14 +48,6 @@ class CurseWindow:
             1,
             2
         )
-
-        curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
-        BLUE = curses.color_pair(1)
-        GREEN = curses.color_pair(2)
-        RED = curses.color_pair(3)
-
         win_msg = curses.newwin(
             2,
             30,
@@ -57,19 +55,16 @@ class CurseWindow:
             25
         )
 
+        # counters
         target_words = 20
         words_count = 0
-
-        # stdscr.nodelay(True)
+        escape_counter = 3
 
         text = ""
 
         self._win_counter.clear()
-        self._win_counter.bkgd(' ')
         self._win_counter.addstr(f'{words_count:03}/{target_words:03} words')
         self._win_counter.refresh()
-
-        escape_counter = 3
 
         while True:
             key = self.get()
@@ -100,6 +95,9 @@ class CurseWindow:
             self._win_counter.refresh()
             win_msg.refresh()
             self._win_texteditor.refresh()
+
+        # saving animation
+        Animation.load(self._win_texteditor)
 
         return text
 
@@ -142,6 +140,7 @@ class CurseWindow:
                 stdscr.addstr(1, 8, "CHAT", GREEN)
 
             stdscr.refresh()
+
 
         curses.curs_set(1)
         stdscr.clear()
@@ -194,30 +193,6 @@ class TextEditor(CurseWindow):
         super().__init__(stdscr, height, width, begin_y, begin_x)
         # self.__box = Textbox(self._window)
         # rectangle(stdscr, 1, 1, height - 1, width - 1)
-
-    def input(self):
-
-        self._stdscr.clear()
-
-        target_words = 20
-
-        # wc = WordCounter(self._stdscr, target_words)
-
-        self._stdscr.nodelay(True)
-
-        text = ""
-
-        while target_words > 0:
-            # wc.display()
-            # self.print(f'count: {target_words}')
-            key = self.get()
-            target_words -= 1
-            self.print(key)
-            text += chr(key)
-            # if chr(key).isspace():
-            #     wc += 1
-        self._stdscr.getch()
-        return text
 
     # def edit(self) -> None:
     #     self.__box.edit()
@@ -330,13 +305,18 @@ def stream(message: str, chunk_size=3, delay=0.1) -> None:
     print("")
 
 
-def loader():
-    animation = ['⣾', '⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽']
-    idx = 0
-    while True:
-        print(animation[idx % len(animation)], end="\r")
-        idx += 1
-        sleep(0.1)
+class Animation:
+    """ Animations for the text editor """
+    @staticmethod
+    def load(screen, rounds=2, before='', after=''):
+        curses.curs_set(0)
+        yx = screen.getyx()
+        frames = ['⣾', '⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽']
+        n = len(frames)
+        for i in range(n * 2):
+            screen.addstr(yx[0] + 1, 0, f'\r{frames[i % n]} saving')
+            screen.refresh()
+            time.sleep(0.1)
 
 
 # def test(stdscr):

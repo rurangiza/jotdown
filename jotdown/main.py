@@ -20,14 +20,13 @@ def main():
     while True:
         pick = wrapper(TextEditor.option_menu)
         if pick == "chat":
+            print("What would you like to know?")
             while (question := prompt(": ")) != "exit!":
                 response = librarian.retrieve(question)
                 stream(response['answer'])
             exit(0)
         else:
             note = scribe.record()
-            time.sleep(1)
-            stream(note)
             librarian.store(note)
 
 
