@@ -103,6 +103,50 @@ class CurseWindow:
 
         return text
 
+    @staticmethod
+    def option_menu(stdscr):
+        stdscr.clear()
+        curses.curs_set(0)
+
+        # curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
+        # GRAY = curses.color_pair(1)
+        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        GREEN = curses.color_pair(2)
+
+        position = 0
+        options = {
+            0: "note",
+            1: "chat"
+        }
+
+        stdscr.addstr(1, 2, "NOTE", GREEN)
+        stdscr.addstr(1, 8, "CHAT")
+        stdscr.refresh()
+
+        while True:
+            rectangle(stdscr, 0, 0, 2, 14)
+
+            ascii = stdscr.getch()
+            match ascii:
+                case 261:  # RIGHT
+                    position = (position + 1) % 2
+                case 260:  # LEFT
+                    position = abs((position - 1) % 2)
+                case 10:  # ENTER
+                    break
+            if position == 0:
+                stdscr.addstr(1, 2, "NOTE", GREEN)
+                stdscr.addstr(1, 8, "CHAT")
+            else:
+                stdscr.addstr(1, 2, "NOTE")
+                stdscr.addstr(1, 8, "CHAT", GREEN)
+
+            stdscr.refresh()
+
+        curses.curs_set(1)
+        stdscr.clear()
+        return options[position]
+
     def clear(self) -> None:
         self._win_texteditor.clear()
 
