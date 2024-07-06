@@ -7,7 +7,7 @@ from time import sleep
 
 
 class CurseWindow:
-    def __init__(self, height, width, begin_y, begin_x):
+    def __init__(self, height=15, width=100, begin_y=4, begin_x=2):
         """
         Curse window
         --
@@ -22,29 +22,107 @@ class CurseWindow:
         self._width = width
         self._begin_y = begin_y
         self._begin_x = begin_x
-        self._window = curses.newwin(
+        self._win_texteditor = None
+        self._win_counter = None
+
+    def input(self, stdscr):
+        self._MAX_LINES = curses.LINES - 1
+        self._MAX_COLS = curses.COLS - 1
+
+        stdscr.clear()
+        self._win_texteditor = curses.newwin(
             self._height,
             self._width,
             self._begin_y,
             self._begin_x
         )
-        # MAX_LINES = curses.LINES - 1
-        # MAX_COLS = curses.COLS - 1
+        self._win_counter = curses.newwin(
+            1,
+            20,
+            1,
+            2
+        )
+
+        curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
+        BLUE = curses.color_pair(1)
+        GREEN = curses.color_pair(2)
+        RED = curses.color_pair(3)
+
+        win_msg = curses.newwin(
+            2,
+            30,
+            1,
+            25
+        )
+
+        target_words = 20
+        words_count = 0
+
+        # stdscr.nodelay(True)
+
+        text = ""
+
+        self._win_counter.clear()
+        self._win_counter.bkgd(' ')
+        self._win_counter.addstr(f'{words_count:03}/{target_words:03} words')
+        self._win_counter.refresh()
+
+        escape_counter = 3
+
+        while True:
+            key = self.get()
+
+            win_msg.clear()
+            if chr(key) == ' ':
+                words_count += 1
+            if key == 27:
+                escape_counter -= 1
+                if words_count >= target_words or escape_counter == 0:
+                    break
+                else:
+                    win_msg.addstr(0, 0, f'{target_words - words_count} more words to write', RED)
+                    win_msg.addstr(1, 0, f'Press ESC {escape_counter} time to surrender', curses.A_DIM)
+            else:
+                escape_counter = 3
+            if words_count > target_words:
+                win_msg.addstr(0, 0, f'Target words reached!\nExit by pressing ESC', GREEN)
+            self.print(key)
+            text += chr(key)
+
+            if chr(key).isspace():
+                words_count += 1
+            self._win_counter.clear()
+            self._win_counter.bkgd(' ')
+            self._win_counter.addstr(f'{words_count:03}/{target_words:03} words')
+
+            self._win_counter.refresh()
+            win_msg.refresh()
+            self._win_texteditor.refresh()
+
+        return text
 
     def clear(self) -> None:
-        self._window.clear()
+        self._win_texteditor.clear()
 
     def refresh(self) -> None:
-        self._window.refresh()
+        self._win_texteditor.refresh()
 
     def print(self, text: str | int) -> None:
+        if isinstance(text, int) and (text == 127 or text == 27):
+            return
         if isinstance(text, int):
             text = chr(text)
-        self._window.addstr(text)
-        self._window.refresh()
+        self._win_texteditor.addstr(text)
+        self._win_texteditor.refresh()
 
-    def get(self) -> chr:
-        ascii_character = self._window.getch()
+    def get(self) -> int:
+        ascii_character = self._win_texteditor.getch()
+        return ascii_character
+
+    def getkey(self) -> chr:
+        ascii_character = self._win_texteditor.getch()
         return chr(ascii_character)
 
     def get_and_print(self) -> None:
@@ -58,16 +136,44 @@ class CurseWindow:
         margin: {self._begin_y}(top), {self._begin_x}(left)
         """
 
+    def __del__(self):
+        curses.nocbreak()
+        curses.echo()
+        curses.endwin()
 
-class TextArea(CurseWindow):
+class TextEditor(CurseWindow):
     """
     Type text one letter at a time and display it on screen
     one after the other
     """
-    def __init__(self, height=15, width=100, begin_y=3, begin_x=2):
-        super().__init__(height, width, begin_y, begin_x)
-        self.__box = Textbox(self._window)
+    def __init__(self, stdscr, height=15, width=100, begin_y=3, begin_x=2):
+        super().__init__(stdscr, height, width, begin_y, begin_x)
+        # self.__box = Textbox(self._window)
         # rectangle(stdscr, 1, 1, height - 1, width - 1)
+
+    def input(self):
+
+        self._stdscr.clear()
+
+        target_words = 20
+
+        # wc = WordCounter(self._stdscr, target_words)
+
+        self._stdscr.nodelay(True)
+
+        text = ""
+
+        while target_words > 0:
+            # wc.display()
+            # self.print(f'count: {target_words}')
+            key = self.get()
+            target_words -= 1
+            self.print(key)
+            text += chr(key)
+            # if chr(key).isspace():
+            #     wc += 1
+        self._stdscr.getch()
+        return text
 
     # def edit(self) -> None:
     #     self.__box.edit()
@@ -98,8 +204,8 @@ class WordCounter(CurseWindow):
     """
     Show word counter header and increment when I type
     """
-    def __init__(self, target: int, height=1, width=20, begin_y=1, begin_x=2):
-        super().__init__(height=1, width=40, begin_y=1, begin_x=2)
+    def __init__(self, stdscr, target: int, height=1, width=20, begin_y=1, begin_x=2):
+        super().__init__(stdscr, height=1, width=40, begin_y=1, begin_x=2)
         self._word_count = 0
         self._char_count = 0
         self._target_word_count = target

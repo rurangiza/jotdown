@@ -25,7 +25,7 @@ def main():
                 stream(response['answer'])
             exit(0)
         else:
-            note = wrapper(scribe.record)
+            note = scribe.record()
             time.sleep(1)
             stream(note)
             librarian.store(note)
