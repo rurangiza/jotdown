@@ -1,6 +1,7 @@
 """ Handling user input and output """
 import curses
 import time
+from datetime import date
 from curses import wrapper
 from curses.textpad import Textbox, rectangle
 from time import sleep
@@ -25,7 +26,7 @@ class CurseWindow:
         self._win_texteditor = None
         self._win_counter = None
 
-    def input(self, stdscr) -> str:
+    def input(self, stdscr) -> dict:
         # variables
         MAX_LINES = curses.LINES - 1
         MAX_COLS = curses.COLS - 1
@@ -78,13 +79,15 @@ class CurseWindow:
                     break
                 else:
                     win_msg.addstr(0, 0, f'{target_words - words_count} more words to write', RED)
-                    win_msg.addstr(1, 0, f'Press ESC {escape_counter} time to surrender', curses.A_DIM)
+                    win_msg.addstr(1, 0, f'Press ESC {escape_counter} times to surrender', curses.A_DIM)
             else:
                 escape_counter = 3
             if words_count > target_words:
                 win_msg.addstr(0, 0, f'Target words reached!\nExit by pressing ESC', GREEN)
+
             self.print(key)
-            text += chr(key)
+            if key != 127: # delete command
+                text += chr(key)
 
             if chr(key).isspace():
                 words_count += 1
@@ -99,7 +102,7 @@ class CurseWindow:
         # saving animation
         Animation.load(self._win_texteditor)
 
-        return text
+        return {"content": text, "word_count": words_count, "date": str(date.today())}
 
     @staticmethod
     def option_menu(stdscr):
@@ -260,16 +263,6 @@ class WordCounter(CurseWindow):
         return f"""
         Word count: {self._word_count} / Target: {self._target_word_count}
         """
-
-
-class ChatWindow(CurseWindow):
-    """
-    Chat app display:
-    - ability to type text (left-aligned)
-    - get text from LLM (right-aligned)
-    """
-    def __init__(self):
-        pass
 
 
 def prompt(message: str) -> str:
