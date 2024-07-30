@@ -69,8 +69,8 @@ class Scribe(LLM):
 
     def record(self):
         """ Get user input in curse window """
-        ted = CurseWindow()
-        note: dict = wrapper(ted.input)
+        text_editor = CurseWindow()
+        note: dict = wrapper(text_editor.input)
         return note
 
     def record_old(self) -> str:

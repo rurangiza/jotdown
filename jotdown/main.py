@@ -16,27 +16,25 @@ from typing import List
 
 def main():
 
-    librarian = Librarian()
+    librarian, scribe = Librarian(), Scribe()
 
+    # weekday: int = date.today().weekday()
+    # its_sunday: bool = True if weekday == 6 else False
 
     while True:
-        pick = wrapper(CurseWindow.option_menu)
-        # date.today().weekday() != 6
-        if pick == "chat": # it's not sunday
-            print("--- It's not sunday, take notes.")
-            scribe = Scribe()
-            note = scribe.record()
-            print(note)
-            # librarian.store(note)
-        else:
-            print("--- It's sunday. Review your notes.")
-            print("What would you like to know?")
-            while (question := prompt(": ")) != "exit!":
-                response = librarian.retrieve(question)
-                stream(response['answer'])
-
-
-
+        mode: str = wrapper(CurseWindow.option_menu)
+        match mode:
+            case "note":
+                note = scribe.record()
+                # print(note)
+                time.sleep(1)
+                break
+                # librarian.store(note)
+            case _:
+                print("What would you like to know?")
+                while (question := prompt(": ")) != "exit!":
+                    response = librarian.retrieve(question)
+                    stream(response['answer'])
 
 
 """ Execution """

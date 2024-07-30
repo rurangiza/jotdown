@@ -79,7 +79,7 @@ class CurseWindow:
                     break
                 else:
                     win_msg.addstr(0, 0, f'{target_words - words_count} more words to write', RED)
-                    win_msg.addstr(1, 0, f'Press ESC {escape_counter} times to surrender', curses.A_DIM)
+                    win_msg.addstr(0, 0, f'Press ESC {escape_counter} times to surrender', curses.A_DIM)
             else:
                 escape_counter = 3
             if words_count > target_words:
