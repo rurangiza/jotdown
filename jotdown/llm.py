@@ -143,7 +143,10 @@ class Librarian(LLM):
             llm=self._llm,
             prompt=self.__template
         )
-        # retrieve must relevant document in vector store
+        # retrieve the most relevant documents in vector store
+        
+        if not self.__vector_store:
+            return None
         retriever = self.__vector_store.as_retriever()
         retrieval_chain = create_retrieval_chain(
             retriever,
@@ -158,6 +161,8 @@ class Librarian(LLM):
 
     def retrieve(self, question: str) -> str:
         chain = self.__create_chain()
+        if not chain:
+            return {"answer": "There are no notes to be found"}
         response = chain.invoke({
             "input": question
         })
