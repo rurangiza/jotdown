@@ -160,6 +160,8 @@ class Librarian(LLM):
         self.__create_db(docs)
 
     def retrieve(self, question: str) -> str:
+        if question == "#soft-exit#":
+            return {"answer": "No question asked."}
         chain = self.__create_chain()
         if not chain:
             return {"answer": "There are no notes to be found"}

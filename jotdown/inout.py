@@ -5,7 +5,7 @@ from datetime import date
 from curses import wrapper
 from curses.textpad import Textbox, rectangle
 from time import sleep
-
+import os
 
 class CurseWindow:
     def __init__(self, height=15, width=100, begin_y=4, begin_x=2):
@@ -50,7 +50,7 @@ class CurseWindow:
             2
         )
         win_msg = curses.newwin(
-            2,
+            3,
             30,
             1,
             25
@@ -79,7 +79,7 @@ class CurseWindow:
                     break
                 else:
                     win_msg.addstr(0, 0, f'{target_words - words_count} more words to write', RED)
-                    win_msg.addstr(0, 0, f'Press ESC {escape_counter} times to surrender', curses.A_DIM)
+                    win_msg.addstr(1, 0, f'Press ESC {escape_counter} times to surrender', curses.A_DIM)
             else:
                 escape_counter = 3
             if words_count > target_words:
@@ -272,6 +272,8 @@ def prompt(message: str) -> str:
     :param message: prompt message
     :return: str, valid user input
     """
+    # os.system('cls' if os.name == 'nt' else 'clear')
+    print("What would you like to know?")
     ans = ""
     count = 2
     while not ans:

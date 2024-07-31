@@ -1,10 +1,15 @@
 """ Imports """
+import sys
+sys.path.append('/Users/fortytwo/Desktop/build/jotdown/jotdown/')
+
 import time
 
 from inout import prompt, stream, TextEditor, CurseWindow
 from llm import Scribe, Librarian
 from datetime import date
 from curses import wrapper
+
+
 
 from typing import List
 
@@ -20,21 +25,22 @@ def main():
 
     # weekday: int = date.today().weekday()
     # its_sunday: bool = True if weekday == 6 else False
-
     while True:
-        mode: str = wrapper(CurseWindow.option_menu)
-        match mode:
-            case "note":
+        try:
+            mode: str = wrapper(CurseWindow.option_menu)
+            if mode == "note":
                 note = scribe.record()
-                # print(note)
-                time.sleep(1)
-                break
-                # librarian.store(note)
-            case _:
-                print("What would you like to know?")
-                while (question := prompt(": ")) != "exit!":
+                # note = """
+                # My favourite anime is Bleach. I've seen every episode and I plan on rewatching them.
+                # Outside of anime I also enjoy watching rocket launches and eating japanese food.
+                # """
+                librarian.store(note)
+            else:
+                while (question := prompt(": ")) != "#soft-exit#":
                     response = librarian.retrieve(question)
                     stream(response['answer'])
+        except KeyboardInterrupt:
+            break
 
 
 """ Execution """
