@@ -102,7 +102,7 @@ class CurseWindow:
         # saving animation
         Animation.load(self._win_texteditor)
 
-        return {"content": text, "word_count": words_count, "date": str(date.today())}
+        return {"content": text, "words_count": words_count}
 
     @staticmethod
     def option_menu(stdscr):

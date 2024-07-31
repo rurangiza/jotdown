@@ -29,12 +29,12 @@ def main():
         try:
             mode: str = wrapper(CurseWindow.option_menu)
             if mode == "note":
-                note = scribe.record()
+                newnote: dict = scribe.record()
                 # note = """
                 # My favourite anime is Bleach. I've seen every episode and I plan on rewatching them.
                 # Outside of anime I also enjoy watching rocket launches and eating japanese food.
                 # """
-                librarian.store(note)
+                librarian.store(newnote)
             else:
                 while (question := prompt(": ")) != "#soft-exit#":
                     response = librarian.retrieve(question)

@@ -154,9 +154,11 @@ class Librarian(LLM):
         )
         return retrieval_chain
 
-    def store(self, text: str) -> None:
+    def store(self, newnote: dict) -> None:
         # turn text into document
-        docs = self.__text_to_doc(text)
+        if newnote['words_count'] == 0:
+            return
+        docs = self.__text_to_doc(newnote['content'])
         self.__create_db(docs)
 
     def retrieve(self, question: str) -> str:
