@@ -5,7 +5,26 @@ from datetime import date
 from curses import wrapper
 from curses.textpad import Textbox, rectangle
 from time import sleep
-import os
+
+from prompt_toolkit import PromptSession
+from prompt_toolkit.styles import Style
+from prompt_toolkit.application import run_in_terminal
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.cursor_shapes import CursorShape
+from prompt_toolkit.application.current import get_app
+
+from termcolor import colored
+
+class CLR: # colors
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class CurseWindow:
     def __init__(self, height=15, width=100, begin_y=4, begin_x=2):
@@ -65,6 +84,8 @@ class CurseWindow:
 
         self._win_counter.clear()
         self._win_counter.addstr(f'{words_count:03}/{target_words:03} words')
+        win_msg.addstr(0, 0, f'Press ESC {escape_counter} times to exit', curses.A_DIM)
+        win_msg.refresh()
         self._win_counter.refresh()
 
         while True:
@@ -79,7 +100,7 @@ class CurseWindow:
                     break
                 else:
                     win_msg.addstr(0, 0, f'{target_words - words_count} more words to write', RED)
-                    win_msg.addstr(1, 0, f'Press ESC {escape_counter} times to surrender', curses.A_DIM)
+                    win_msg.addstr(1, 0, f'Press ESC {escape_counter} times to exit', curses.A_DIM)
             else:
                 escape_counter = 3
             if words_count > target_words:
@@ -264,6 +285,14 @@ class WordCounter(CurseWindow):
         Word count: {self._word_count} / Target: {self._target_word_count}
         """
 
+# Key bindings
+# bindings = KeyBindings()
+
+# @bindings.add('c-c')
+# def _(event):
+#     "Pressing Ctrl-C will exit the application."
+#     event.app.exit()
+
 
 def prompt(message: str) -> str:
     """
@@ -272,16 +301,30 @@ def prompt(message: str) -> str:
     :param message: prompt message
     :return: str, valid user input
     """
-    # os.system('cls' if os.name == 'nt' else 'clear')
-    print("What would you like to know?")
-    ans = ""
+    style = Style.from_dict({
+        '': '#ffffff bold',  # Apply bold to the default input text
+        'placeholder': 'fg:#888888 italic'
+    })
+    session = PromptSession()
+    def get_prompt_text():
+        placeholder = 'Ask anything about your notes'
+        # This will return the placeholder if input is empty
+        text = session.default_buffer.document.text
+        if not text:
+            get_app().layout.current_buffer.reset()
+            return [("class:placeholder", placeholder)]
+        else:
+            return []
+
+    user_input = ""
     count = 2
-    while not ans:
+    while not user_input:
         if count == 0:
-            return "#soft-exit#"
-        ans = input(f"{message} ")
+            return "exit!"
+        user_input = session.prompt(get_prompt_text, style=style, cursor=CursorShape.BLINKING_UNDERLINE)
         count -= 1
-    return ans
+    
+    return user_input
 
 
 def stream(message: str, chunk_size=3, delay=0.1) -> None:

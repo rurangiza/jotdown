@@ -8,6 +8,7 @@ faiss-cpu>=1.8.0.post1
 #windows-curses>=2.3.3
 
 termcolor
+prompt_toolkit
 
 pytest>=8.2.2
 pylint>=3.2.5

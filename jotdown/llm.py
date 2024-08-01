@@ -166,7 +166,7 @@ class Librarian(LLM):
             return {"answer": "No question asked."}
         chain = self.__create_chain()
         if not chain:
-            return {"answer": "There are no notes to be found"}
+            return {"answer": "There are no notes to be found.\nFirst write one."}
         response = chain.invoke({
             "input": question
         })

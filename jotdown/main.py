@@ -9,13 +9,12 @@ from llm import Scribe, Librarian
 from datetime import date
 from curses import wrapper
 
-
+from termcolor import colored
 
 from typing import List
 
 
 """ Configuration """
-
 
 """ Code """
 
@@ -30,16 +29,14 @@ def main():
             mode: str = wrapper(CurseWindow.option_menu)
             if mode == "note":
                 newnote: dict = scribe.record()
-                # note = """
-                # My favourite anime is Bleach. I've seen every episode and I plan on rewatching them.
-                # Outside of anime I also enjoy watching rocket launches and eating japanese food.
-                # """
                 librarian.store(newnote)
             else:
-                while (question := prompt(": ")) != "#soft-exit#":
+                while (question := prompt(">>> ")) != "exit!":
                     response = librarian.retrieve(question)
                     stream(response['answer'])
         except KeyboardInterrupt:
+            break
+        except EOFError:
             break
 
 
