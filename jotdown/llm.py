@@ -13,10 +13,9 @@ from langchain.chains import create_retrieval_chain
 
 from datetime import datetime
 from typing import List
-import curses
 from curses import wrapper
 
-from jotdown.inout import prompt, stream, TextEditor, WordCounter, CurseWindow
+from jotdown.ui import Editor, CLI
 
 GPT3 = "gpt-3.5-turbo-0125"
 GPT4 = "gpt-4o"
@@ -44,12 +43,13 @@ class LLM:
         return response.content
 
 
-class Scribe(LLM):
+class Scribe(LLM, Editor):
     """
     Records and cleans notes
     """
     def __init__(self) -> None:
-        super().__init__()
+        LLM.__init__(self)
+        Editor.__init__(self)
         self.__MIN_WORDS = 20
         self.__system_msg = """\
         You are a note-cleaning assistant. Your goal is to clean the text below delimited by triple backticks.
@@ -67,37 +67,10 @@ class Scribe(LLM):
             ]
         )
 
-    def record(self):
+    def take_notes(self) -> dict:
         """ Get user input in curse window """
-        text_editor = CurseWindow()
-        note: dict = wrapper(text_editor.input)
+        note: dict = wrapper(self.input)
         return note
-
-    def record_old(self) -> str:
-        """ Get user input """
-        user_input: List[str] = []
-        word_count: int = 0
-        try:
-            while True:
-                ans: str = prompt("...")
-                if ans == "#soft-exit#":
-                    if word_count >= self.__MIN_WORDS:
-                        break
-                    stream(f"{self.__MIN_WORDS - word_count} more words to write")
-                    continue
-                user_input.append(ans)
-                word_count += len(ans.split())
-        except EOFError as _:
-            pass
-        except KeyboardInterrupt as _:
-            pass
-        note: str = "\n".join(user_input)
-        stream(f"You've written {word_count} words")
-
-        # do something: clean, summarize or other
-        if not note:
-            return ""
-        return self.__clean(note)
 
     def __clean(self, note: str) -> str:
         """ Cleans note while maintaining original meaning """
@@ -106,18 +79,24 @@ class Scribe(LLM):
         return response.content
 
 
-class Librarian(LLM):
+class Librarian(LLM, CLI):
     """
     The Librarian stores and retrieves notes based on user needs
     """
     def __init__(self) -> None:
-        super().__init__()
+        LLM.__init__(self)
+        CLI.__init__(self)
         self.__template = ChatPromptTemplate.from_template("""
         Answer the user's question in a concise and confident way, based on the context given below and your knowledge.
         Context: ```{context}```
         Question: {input}
         """)
         self.__vector_store = None
+    
+    def chat(self):
+        while (question := self.input(msg=">>")) != "exit!":
+            response = self.retrieve(question)
+            self.stream(response['answer'])
 
     def __text_to_doc(self, text: str) -> Document:
         """ Turns text into a document """
