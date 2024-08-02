@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from jotdown.inout import stream, prompt
+from jotdown.ui import stream, prompt
 from io import StringIO
 import pytest
 

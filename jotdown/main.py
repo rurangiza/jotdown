@@ -1,38 +1,33 @@
-""" Imports """
+import sys
 import time
-
-from inout import prompt, stream, TextEditor
+sys.path.append('/Users/fortytwo/Desktop/build/jotdown/jotdown/')
 from llm import Scribe, Librarian
 from datetime import date
-from curses import wrapper
-
 from typing import List
-
-
-""" Configuration """
 
 
 """ Code """
 
+
 def main():
 
-    librarian = Librarian()
-
-    if date.today().weekday() != 6: # it's not sunday
-        print("--- It's not sunday, take notes.")
-        scribe = Scribe()
-        note = scribe.record()
-        print(note)
-        # librarian.store(note)
-    else:
-        print("--- It's sunday. Review your notes.")
-        print("What would you like to know?")
-        while (question := prompt(": ")) != "exit!":
-            response = librarian.retrieve(question)
-            stream(response['answer'])
-        exit(0)
-
-
+    weekday: int = date.today().weekday()
+    its_sunday: bool = True if weekday == 6 else False
+    try:
+        librarian = Librarian()
+        if its_sunday:
+            librarian.chat()
+        else:
+            scribe = Scribe()
+            newnote: dict = scribe.take_notes()
+            librarian.store(newnote)            
+    except KeyboardInterrupt:
+        pass
+    except EOFError:
+        pass
+    except Exception as e:
+        print(f'Unexpected Error: {e}')
+        time.sleep(2)
 
 """ Execution """
 
