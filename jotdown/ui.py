@@ -84,12 +84,12 @@ class Editor(IUserInput):
         Doc: https://docs.python.org/3/howto/curses.html
         """
         super().__init__()
-        self._height = height
-        self._width = width
-        self._begin_y = begin_y
-        self._begin_x = begin_x
-        self._win_texteditor = None
-        self._win_counter = None
+        self.__height = height
+        self.__width = width
+        self.__begin_y = begin_y
+        self.__begin_x = begin_x
+        self.__win_texteditor = None
+        self.__win_counter = None
 
     def input(self, stdscr) -> dict:
         # variables
@@ -102,13 +102,13 @@ class Editor(IUserInput):
 
         # init windows
         stdscr.clear()
-        self._win_texteditor = curses.newwin(
-            self._height,
-            self._width,
-            self._begin_y,
-            self._begin_x
+        self.__win_texteditor = curses.newwin(
+            self.__height,
+            self.__width,
+            self.__begin_y,
+            self.__begin_x
         )
-        self._win_counter = curses.newwin(
+        self.__win_counter = curses.newwin(
             1,
             20,
             1,
@@ -128,11 +128,11 @@ class Editor(IUserInput):
 
         text = ""
 
-        self._win_counter.clear()
-        self._win_counter.addstr(f'{words_count:03}/{target_words:03} words')
+        self.__win_counter.clear()
+        self.__win_counter.addstr(f'{words_count:03}/{target_words:03} words')
         win_msg.addstr(0, 0, f'Press ESC {escape_counter} times to exit', curses.A_DIM)
         win_msg.refresh()
-        self._win_counter.refresh()
+        self.__win_counter.refresh()
 
         while True:
             key = self.get()
@@ -158,38 +158,38 @@ class Editor(IUserInput):
 
             if chr(key).isspace():
                 words_count += 1
-            self._win_counter.clear()
-            self._win_counter.bkgd(' ')
-            self._win_counter.addstr(f'{words_count:03}/{target_words:03} words')
+            self.__win_counter.clear()
+            self.__win_counter.bkgd(' ')
+            self.__win_counter.addstr(f'{words_count:03}/{target_words:03} words')
 
-            self._win_counter.refresh()
+            self.__win_counter.refresh()
             win_msg.refresh()
-            self._win_texteditor.refresh()
+            self.__win_texteditor.refresh()
 
-        Animation.load(self._win_texteditor)
+        Animation.load(self.__win_texteditor)
         return {"content": text, "words_count": words_count}
 
 
-    def clear(self) -> None:
-        self._win_texteditor.clear()
+    # def clear(self) -> None:
+    #     self._win_texteditor.clear()
 
-    def refresh(self) -> None:
-        self._win_texteditor.refresh()
+    # def refresh(self) -> None:
+    #     self._win_texteditor.refresh()
 
     def print(self, text: str | int) -> None:
         if isinstance(text, int) and (text == 127 or text == 27):
             return
         if isinstance(text, int):
             text = chr(text)
-        self._win_texteditor.addstr(text)
-        self._win_texteditor.refresh()
+        self.__win_texteditor.addstr(text)
+        self.__win_texteditor.refresh()
 
     def get(self) -> int:
-        ascii_character = self._win_texteditor.getch()
+        ascii_character = self.__win_texteditor.getch()
         return ascii_character
 
     def getkey(self) -> chr:
-        ascii_character = self._win_texteditor.getch()
+        ascii_character = self.__win_texteditor.getch()
         return chr(ascii_character)
 
     def get_and_print(self) -> None:
@@ -198,9 +198,9 @@ class Editor(IUserInput):
 
     def __str__(self):
         return f"""
-        width: {self._width} | height: {self._height}
-        area: {self._width * self._height}
-        margin: {self._begin_y}(top), {self._begin_x}(left)
+        width: {self.__width} | height: {self.__height}
+        area: {self.__width * self.__height}
+        margin: {self.__begin_y}(top), {self.__begin_x}(left)
         """
 
     def __del__(self):

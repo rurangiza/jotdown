@@ -1,87 +1,91 @@
 # Jotdown
 ### Your CLI note-taking companion
+Jotdown is a note-taking app for devs. Everything is done in the terminal, during the week you can only take notes, and on sundays you can ask questions about your notes for review.
 
-> [!Important]
-> This README is not finished and the app is not ready for use. Check the to-do list [below](#to-dos-v1) for current features.
-
-Jotdown is a note-taking app for devs. Take daily notes during the week and review them on sunday.
-
-## Features
-- take notes in your terminal
-- ask questions about your notes with LLM+RAG
 
 ## Try it
 
-1. install: `pip install jotdown-tool`
-2. write `jotdown` in your terminal
-
-```bash
-$ jotdown
-```
+1. Clone the project
+2. Create and activate an environment: a) ``python -m venv jotdown-venv`` then b) ``source jotdown/bin/activate``
+2. Install the dependencies by running ``make install``
+3. run ``make``
+- if it's a weekday (MON-SAT), you'll be able to write notes. On sunday, you'll be able to review your notes by asking questions.
 
 ## How it works
-There are two main features:
-1. Taking notes
-2. Asking questions about the notes
+Jotdown is basically 2 features, taking notes and asking questions about the notes. Here is how both are implemented:
 
+1. __Taking notes__
+    
+    I used the [ncurses](https://docs.python.org/3/howto/curses.html) library to provide a better user experience. It allowed me to do the following which is not possible with the standard input function.
+   - multi-line writing and editing like in normal text editors
+   - show word count, to know when you hit your daily words goal
+   - show custom messages while writing
+   - custom actions based on key-press (press ESC to exit)
+
+    Once you finish taking notes, it is saved in a vector database so that when I want to review my week, I can retrieve relevent notes to answer my questions.
+
+
+2. __Asking questions about the notes__
+
+    After retrieving notes that are relevant to my question, I add them as context to the API call to OpenAI.
+    I used Langchain as framework to interact with OpenAI and format my prompt templates.
+
+### System Design
 ```mermaid
-
+---
+title: Jotdown class diagram 
+---
 classDiagram
     LLM <|-- Scribe
     LLM <|-- Librarian
-
+    
     class LLM {
-        #ChatOpenAI llm
-        #ChatPromptTemplate template
-        ask()
+        #llm: ChatOpenAI
+        #template: ChatPromptTemplate
+        +ask()
     }
     class Scribe {
-        -string MIN_WORDS
-        -string system_msg
-        +record()
+        -MIN_WORDS: String
+        -system_msg: String
+        +take_notes()
         -clean()
     }
     class Librarian {
-        -vector_store
         +store()
-        +retrieve()
+        #retrieve()
+        +chat()
+        -vector_store
         -create_db()
         -create_chain()
         -text_to_doc()
     }
+    
+    IUserInput <|-- Editor
+    IUserInput <|-- CLI
+    CLI <|-- Librarian
+    Editor <|-- Scribe
+	  
+    class IUserInput {
+        +input()
+    }
+    class Editor {
+        -height: int
+        -width: int
+        -begin_y: int
+        -begin_x: int
+        -win_texteditor: _CursesWindow
+        -win_counter: _CursesWindow
+        +print()
+        +get()
+        +getkey()
+        +get_and_print()
+    }
+    class CLI {
+        +stream()
+    }
 ```
 
-#### Taking notes
-
-- ncruses
-- saving the notes + metadata (vector database)
-
-#### Asking questions about the notes
-
-- retieving relevant notes from vector database
-- chat history
-- send both retrieved chunks and history in context window
-
-
-
-## To-do's (v1)
-Fixes
-- [ ] vdb: add notes instead of replacing
-
-Features
-- [x] take user input and output in streams (chunks of text)
-- [x] add minimum word requirements
-- [x] convert note to document, with metadata like daytime, content tags,..
-- [x] store document in vector store (FAISS or Pinecone)
-- [x] retrieve relevant notes to answer a question (similarity search, hybrid search)
-- [ ] add chat history
-- [x] word countdown while typing (curses)
-
-Enhancements
-- [ ] use function calling
-- [ ] use local db instead of in-memory db
-- [ ] add automated testing (pytest, mypy, github actions)
-- [ ] add class attributes to monitor token usage and api calls to openai
-
-User Experience
-- [x] use curses for better UX
+## Improvements
+- [ ] db: use local db instead of in-memory db
+- [ ] ui: use ncurses editor => text editing
+- [ ] test: add automated testing (pytest, mypy, github actions)
