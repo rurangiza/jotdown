@@ -86,6 +86,5 @@ classDiagram
 ```
 
 ## Improvements
-- [ ] db: use local db instead of in-memory db
 - [ ] ui: use ncurses editor => text editing
 - [ ] test: add automated testing (pytest, mypy, github actions)

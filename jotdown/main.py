@@ -1,19 +1,20 @@
 import os
 import sys
-sys.path.append('/Users/fortytwo/Desktop/build/jotdown/jotdown/')
-
 import time
 import getpass
-
 from llm import Scribe, Librarian
 from datetime import date
+
+sys.path.append('/Users/fortytwo/Desktop/build/jotdown/jotdown/')
 
 
 def main():
 
+    # Setup
     if not os.environ['OPENAI_API_KEY']:
         os.environ['OPENAI_API_KEY'] = getpass.getpass("OpenAI API key: ")
 
+    # app
     weekday: int = date.today().weekday()
     its_sunday: bool = True if weekday == 6 else False
     try:
