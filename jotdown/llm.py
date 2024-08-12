@@ -6,16 +6,19 @@ load_dotenv(find_dotenv())
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.schema.document import Document
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores.faiss import FAISS
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 
-from datetime import datetime
-from typing import List
+from datetime import date
 from curses import wrapper
 
 from jotdown.ui import Editor, CLI
+
+from langchain_community.embeddings import OllamaEmbeddings
+from langchain_chroma import Chroma
+from uuid import uuid4
+from langchain_core.documents import Document
+
 
 GPT3 = "gpt-3.5-turbo-0125"
 GPT4 = "gpt-4o"
@@ -83,7 +86,7 @@ class Librarian(LLM, CLI):
     """
     The Librarian stores and retrieves notes based on user needs
     """
-    def __init__(self) -> None:
+    def __init__(self, db_name="./db/notes") -> None:
         LLM.__init__(self)
         CLI.__init__(self)
         self.__template = ChatPromptTemplate.from_template("""
@@ -91,54 +94,37 @@ class Librarian(LLM, CLI):
         Context: ```{context}```
         Question: {input}
         """)
-        self.__vector_store = None
+        self.__embedding_model = OllamaEmbeddings(model='mxbai-embed-large')
+        self.__db =  Chroma(
+            collection_name="daily-notes",
+            embedding_function=self.__embedding_model,
+            persist_directory= db_name
+        )
+        self.__docs_count = self.__db._collection.count()
     
     def chat(self):
-        while (question := self.input(msg=">>")) != "exit!":
-            response = self.retrieve(question)
+        placeholder = "Ask anything about your notes"
+        if (count := self.__docs_count) < 4:
+            print(f"Not enough documents writtent ({count})")
+            return
+        while (question := self.input(msg=">>", placeholder=placeholder)) != "exit!":
+            response = self.retrieve(question)            
             self.stream(response['answer'])
-
-    def __text_to_doc(self, text: str) -> Document:
-        """ Turns text into a document """
-        # Metadata: date, time, tags, category
-        document = Document(
-            page_content=text,
-            metadata={
-                'datetime': str(datetime.now()),
-                'category': ['thoughts', 'ideas'], # TODO: should be dynamic
-            }
-        )
-        return document
-
-    def __create_db(self, docs: Document) -> None:
-        """ Turns document into embeddings """
-        embedding = OpenAIEmbeddings()
-        self.__vector_store = FAISS.from_documents([docs], embedding=embedding)
-
-    def __create_chain(self):  # TODO: what return type?
-        # same as: chain = template | llm
-        # pass list of documents into the chain
-        chain = create_stuff_documents_chain(
-            llm=self._llm,
-            prompt=self.__template
-        )
-        # retrieve the most relevant documents in vector store
-        
-        if not self.__vector_store:
-            return None
-        retriever = self.__vector_store.as_retriever()
-        retrieval_chain = create_retrieval_chain(
-            retriever,
-            chain
-        )
-        return retrieval_chain
 
     def store(self, newnote: dict) -> None:
         # turn text into document
         if newnote['words_count'] == 0:
             return
-        docs = self.__text_to_doc(newnote['content'])
-        self.__create_db(docs)
+        
+        doc = Document(
+            page_content = newnote['content'],
+            metadata = {
+                "date" : str(date.today()),
+                "words_count": newnote['words_count'],
+            },
+            id = str(uuid4())
+        )
+        self.__db.add_documents(documents=[doc])
 
     def retrieve(self, question: str) -> str:
         if question == "#soft-exit#":
@@ -152,7 +138,23 @@ class Librarian(LLM, CLI):
         return response
 
 
+    def __create_chain(self):  # TODO: what return type?
+        # same as: chain = template | llm
+        # pass list of documents into the chain
+        chain = create_stuff_documents_chain(
+            llm=self._llm,
+            prompt=self.__template
+        )
+        # retrieve the most relevant documents in vector store
+        
+        retriever = self.__db.as_retriever()
+        retrieval_chain = create_retrieval_chain(
+            retriever,
+            chain
+        )
+        return retrieval_chain
+
+
 if __name__ == '__main__':
     llm = LLM()
     print(llm.ask("who is Elon Musk?"))
-

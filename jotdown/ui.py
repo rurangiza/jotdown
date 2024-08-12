@@ -42,6 +42,7 @@ class CLI(IUserInput):
         })
         user_input = ""
         count = 2
+        print()
         while not user_input:
             if count == 0:
                 return "exit!"

@@ -2,6 +2,7 @@
 *.init_done
 *play.py
 jotdown-venv/
+db/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
