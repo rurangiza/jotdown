@@ -203,10 +203,10 @@ class Editor(IUserInput):
         margin: {self.__begin_y}(top), {self.__begin_x}(left)
         """
 
-    def __del__(self) -> None:
-        curses.nocbreak()
-        curses.echo()
-        curses.endwin()
+    # def __del__(self) -> None:
+    #     curses.nocbreak()
+    #     curses.echo()
+    #     curses.endwin()
 
 
 class Menu:

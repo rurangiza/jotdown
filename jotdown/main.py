@@ -1,6 +1,7 @@
 """ Imports """
 
 import os
+import sys
 import getpass
 
 from datetime import date
@@ -20,17 +21,31 @@ if not os.environ['OPENAI_API_KEY']:
 """ The fun begins """
 
 def main():
+    librarian, scribe = Librarian(), Scribe()
+
     # weekday: int = date.today().weekday()
     # its_sunday: bool = True if weekday == 6 else False
-    pick = Menu.select()
+
+    demo_notes = [
+        "my name is lupin. I live in Brussels, which is a city in Belgium",
+        "I love watching anime, my favourite is One Piece, because I love travelling on boats",
+        "my favourite music are soul music, hip-hop, jazz and electronic. i can play the keyboard and I use Ableton as my D.A.W",
+        "I've travelled to a few places. Malta, Croatia, England and Norway"
+    ]
+
     try:
-        librarian = Librarian()
-        if pick == "chat":
+        args = sys.argv
+        if len(args) == 2 and args[1] == "demo":
+            for note in demo_notes:
+                librarian.store({"content": note, "words_count": len(note.split())})
             librarian.chat()
         else:
-            scribe = Scribe()
-            note: dict = scribe.record()
-            librarian.store(note)
+            while True:
+                if Menu.select() == "chat":
+                    librarian.chat()
+                else:
+                    note: dict = scribe.record()
+                    librarian.store(note)
     except KeyboardInterrupt:
         pass
     except EOFError:

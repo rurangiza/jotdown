@@ -25,6 +25,9 @@ all: run
 run:
 	@$(INTERPRETER) $(SRC_DIR)/$(ENTRYPOINT).py
 
+demo:
+	@$(INTERPRETER) $(SRC_DIR)/$(ENTRYPOINT).py demo
+
 test:
 	@pytest
 

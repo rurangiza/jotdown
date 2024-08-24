@@ -32,7 +32,7 @@ class LLM:
     - Librarian
     """
 
-    def __init__(self, model=GPT3, temperature=0.8) -> None:
+    def __init__(self, model=GPT3, temperature=1) -> None:
         self._llm = ChatOpenAI(
             model = model,
             temperature = temperature,
@@ -91,12 +91,6 @@ class Librarian(LLM, CLI):
         LLM.__init__(self)
         CLI.__init__(self)
 
-        self.__template = ChatPromptTemplate.from_template("""
-        Directly answer the user's question in a concise and confident way, based on the context given below and your knowledge.
-        Context: ```{context}```
-        Question: {input}
-        """)
-
         self.__template = ChatPromptTemplate.from_messages(
             [
                 ("system", "Directly answer the user's question in a natural conversational way. Take the context into consideration: {context}"),
@@ -111,20 +105,13 @@ class Librarian(LLM, CLI):
             embedding_function = self.__embedding_model,
             persist_directory = db_name
         )
-        self.__db_size = self.__db._collection.count()
-
-        self._chain = self.__create_chain()
-
         self._chat_history = []
     
     def chat(self):
         placeholder = "Ask anything about your notes"
-        # if (count := self.__db_size) < 4:
-        #     print(f"Not enough documents written. {4 - count} more are needed.")
-        #     return
         while (question := self.input(msg=">>", placeholder=placeholder)) != "exit!":
             self._chat_history.append(HumanMessage(question))
-            response = self.retrieve(question)
+            response = self.retrieve(question)['answer']
             self._chat_history.append(AIMessage(response))
             self.stream(response)
 
@@ -144,18 +131,20 @@ class Librarian(LLM, CLI):
         self.__db.add_documents(documents=[doc])
     
     def retrieve(self, question: str) -> str:
+        k = 4
+        if (count := self.__db._collection.count()) < 4:
+            k = count if count > 0 else 1
         if question == "#soft-exit#":
             return {"answer": "No question asked."}
-        chain = self.__create_chain()
+        chain = self.__create_chain(k)
         if not chain:
             return {"answer": "There are no notes to be found.\nFirst write one."}
-        response = chain.invoke({
+        return chain.invoke({
             "input": question,
             "chat_history": self._chat_history
         })
-        return response['answer']
 
-    def __create_chain(self):  # TODO: what return type?
+    def __create_chain(self, k):  # TODO: what return type?
         # same as: chain = template | llm
         # pass list of documents into the chain
         chain = create_stuff_documents_chain(
@@ -163,17 +152,12 @@ class Librarian(LLM, CLI):
             prompt=self.__template
         )
         
-        retriever = self.__db.as_retriever()
+        retriever = self.__db.as_retriever(search_kwargs={"k":k})
         retrieval_chain = create_retrieval_chain(
             retriever,
             chain
         )
         return retrieval_chain
-    
-        chain = create_stuff_documents_chain(
-            llm=self._llm,
-            prompt=self.__template
-        )
 
 def main():
     llm = LLM()
