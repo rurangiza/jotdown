@@ -47,7 +47,7 @@ classDiagram
     class Scribe {
         -MIN_WORDS: String
         -system_msg: String
-        +take_notes()
+        +record()
         -clean()
     }
     class Librarian {
@@ -86,5 +86,8 @@ classDiagram
 ```
 
 ## Improvements
-- [ ] ui: use ncurses editor => text editing
-- [ ] test: add automated testing (pytest, mypy, github actions)
+- [ ] use ncurses editor => text editing
+- [ ] add more tests
+- [ ] use github actions for automated testing
+- [ ] add real token streaming
+- [ ] publish as a pip package

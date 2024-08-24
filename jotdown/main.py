@@ -1,39 +1,43 @@
+""" Imports """
+
 import os
-import sys
-import time
 import getpass
-from llm import Scribe, Librarian
+
 from datetime import date
+from llm import Scribe, Librarian
+from ui import Menu
 
-sys.path.append('/Users/fortytwo/Desktop/build/jotdown/jotdown/')
+from dotenv import load_dotenv
 
+
+""" Configuration / Setup """
+
+load_dotenv()
+if not os.environ['OPENAI_API_KEY']:
+    os.environ['OPENAI_API_KEY'] = getpass.getpass("Enter your OpenAI API key: ")
+
+
+""" The fun begins """
 
 def main():
-
-    # Setup
-    if not os.environ['OPENAI_API_KEY']:
-        os.environ['OPENAI_API_KEY'] = getpass.getpass("OpenAI API key: ")
-
-    # app
-    weekday: int = date.today().weekday()
-    its_sunday: bool = True if weekday == 6 else False
+    # weekday: int = date.today().weekday()
+    # its_sunday: bool = True if weekday == 6 else False
+    pick = Menu.select()
     try:
         librarian = Librarian()
-        if not its_sunday:
+        if pick == "chat":
             librarian.chat()
         else:
             scribe = Scribe()
-            newnote: dict = scribe.take_notes()
-            librarian.store(newnote)            
+            note: dict = scribe.record()
+            librarian.store(note)
     except KeyboardInterrupt:
         pass
     except EOFError:
         pass
     except Exception as e:
-        print(f'Unexpected Error: {e}')
-        time.sleep(2)
-
-""" Execution """
+        with open("logs.txt", "a") as f:
+            f.write(f'- UNEXPECTED ERROR: {e} | {str(date.today())}')
 
 if __name__ == "__main__":
     main()

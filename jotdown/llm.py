@@ -1,20 +1,21 @@
-import os
-
-from dotenv import load_dotenv, find_dotenv
-load_dotenv(find_dotenv())
+from dotenv import load_dotenv
+load_dotenv()
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.schema.document import Document
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.prompts import MessagesPlaceholder
+from langchain_core.messages import AIMessage, HumanMessage
 
 from datetime import date
 from curses import wrapper
 
 from jotdown.ui import Editor, CLI
 
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 from uuid import uuid4
 from langchain_core.documents import Document
@@ -30,19 +31,17 @@ class LLM:
     - Scribe
     - Librarian
     """
-    tokens_count = 0
-    openai_calls = 0
 
-    def __init__(self, model=GPT3, temperature=0.2) -> None:
+    def __init__(self, model=GPT3, temperature=0.8) -> None:
         self._llm = ChatOpenAI(
-            model=model,
-            temperature=temperature,
+            model = model,
+            temperature = temperature,
         )
         self._template = ChatPromptTemplate.from_template("""{prompt}""")
 
-    def ask(self, question: str) -> str:
+    def ask(self, prompt: str) -> str:
         chain = self._template | self._llm
-        response = chain.invole({'prompt': question})
+        response = chain.invoke({'prompt': prompt})
         return response.content
 
 
@@ -53,7 +52,7 @@ class Scribe(LLM, Editor):
     def __init__(self) -> None:
         LLM.__init__(self)
         Editor.__init__(self)
-        self.__MIN_WORDS = 20
+
         self.__system_msg = """\
         You are a note-cleaning assistant. Your goal is to clean the text below delimited by triple backticks.
         By cleaning I specifically mean:\
@@ -70,7 +69,7 @@ class Scribe(LLM, Editor):
             ]
         )
 
-    def take_notes(self) -> dict:
+    def record(self) -> dict:
         """ Get user input in curse window """
         note: dict = wrapper(self.input)
         return note
@@ -78,7 +77,9 @@ class Scribe(LLM, Editor):
     def __clean(self, note: str) -> str:
         """ Cleans note while maintaining original meaning """
         chain = self.__template | self._llm
-        response = chain.invoke({"prompt": note})
+        response = chain.invoke({
+            "prompt": note
+        })
         return response.content
 
 
@@ -86,30 +87,46 @@ class Librarian(LLM, CLI):
     """
     The Librarian stores and retrieves notes based on user needs
     """
-    def __init__(self, db_name="./db/notes") -> None:
+    def __init__(self, db_name="./db") -> None:
         LLM.__init__(self)
         CLI.__init__(self)
+
         self.__template = ChatPromptTemplate.from_template("""
-        Answer the user's question in a concise and confident way, based on the context given below and your knowledge.
+        Directly answer the user's question in a concise and confident way, based on the context given below and your knowledge.
         Context: ```{context}```
         Question: {input}
         """)
-        self.__embedding_model = OllamaEmbeddings(model='mxbai-embed-large')
-        self.__db =  Chroma(
-            collection_name="daily-notes",
-            embedding_function=self.__embedding_model,
-            persist_directory= db_name
+
+        self.__template = ChatPromptTemplate.from_messages(
+            [
+                ("system", "Directly answer the user's question in a natural conversational way. Take the context into consideration: {context}"),
+                MessagesPlaceholder(variable_name="chat_history"),
+                ("human", "{input}")
+            ]
         )
-        self.__docs_count = self.__db._collection.count()
+
+        self.__embedding_model = OpenAIEmbeddings(model='text-embedding-3-large')
+        self.__db =  Chroma(
+            collection_name = "daily-notes",
+            embedding_function = self.__embedding_model,
+            persist_directory = db_name
+        )
+        self.__db_size = self.__db._collection.count()
+
+        self._chain = self.__create_chain()
+
+        self._chat_history = []
     
     def chat(self):
         placeholder = "Ask anything about your notes"
-        if (count := self.__docs_count) < 4:
-            print(f"Not enough documents writtent ({count})")
-            return
+        # if (count := self.__db_size) < 4:
+        #     print(f"Not enough documents written. {4 - count} more are needed.")
+        #     return
         while (question := self.input(msg=">>", placeholder=placeholder)) != "exit!":
-            response = self.retrieve(question)            
-            self.stream(response['answer'])
+            self._chat_history.append(HumanMessage(question))
+            response = self.retrieve(question)
+            self._chat_history.append(AIMessage(response))
+            self.stream(response)
 
     def store(self, newnote: dict) -> None:
         # turn text into document
@@ -125,7 +142,7 @@ class Librarian(LLM, CLI):
             id = str(uuid4())
         )
         self.__db.add_documents(documents=[doc])
-
+    
     def retrieve(self, question: str) -> str:
         if question == "#soft-exit#":
             return {"answer": "No question asked."}
@@ -133,10 +150,10 @@ class Librarian(LLM, CLI):
         if not chain:
             return {"answer": "There are no notes to be found.\nFirst write one."}
         response = chain.invoke({
-            "input": question
+            "input": question,
+            "chat_history": self._chat_history
         })
-        return response
-
+        return response['answer']
 
     def __create_chain(self):  # TODO: what return type?
         # same as: chain = template | llm
@@ -145,7 +162,6 @@ class Librarian(LLM, CLI):
             llm=self._llm,
             prompt=self.__template
         )
-        # retrieve the most relevant documents in vector store
         
         retriever = self.__db.as_retriever()
         retrieval_chain = create_retrieval_chain(
@@ -153,8 +169,13 @@ class Librarian(LLM, CLI):
             chain
         )
         return retrieval_chain
+    
+        chain = create_stuff_documents_chain(
+            llm=self._llm,
+            prompt=self.__template
+        )
 
-
-if __name__ == '__main__':
+def main():
     llm = LLM()
-    print(llm.ask("who is Elon Musk?"))
+    ans = llm.ask('what is CUBA?')
+    print(ans)

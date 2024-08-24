@@ -1,11 +1,10 @@
 python-dotenv>=1.0.1
+windows-curses; sys_platform == 'win32'
+pytest>=8.2.2
+pylint>=3.2.5
 langchain>=0.2.6
 langchain-openai>=0.1.13
 langchain-community>=0.2.6
-pinecone-client>=4.1.1
-faiss-cpu>=1.8.0.post1
 prompt_toolkit
-pytest>=8.2.2
-pylint>=3.2.5
 mypy
 langchain-chroma

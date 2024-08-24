@@ -1,8 +1,10 @@
 # Project specific
 *.init_done
 *play.py
+*play.ipynb
 jotdown-venv/
 db/
+logs.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
