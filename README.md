@@ -2,14 +2,7 @@
 ### Your CLI note-taking companion
 Jotdown is a note-taking app for devs. Everything is done in the terminal, during the week you can only take notes, and on sundays you can ask questions about your notes for review.
 
-
-## Try it
-
-1. Clone the project
-2. Create and activate an environment: a) ``python -m venv jotdown-venv`` then b) ``source jotdown/bin/activate``
-2. Install the dependencies by running ``make install``
-3. run ``make``
-- if it's a weekday (MON-SAT), you'll be able to write notes. On sunday, you'll be able to review your notes by asking questions.
+![](./assets/walkthrough.gif)
 
 ## How it works
 Jotdown is basically 2 features, taking notes and asking questions about the notes. Here is how both are implemented:
@@ -29,61 +22,6 @@ Jotdown is basically 2 features, taking notes and asking questions about the not
 
     After retrieving notes that are relevant to my question, I add them as context to the API call to OpenAI.
     I used Langchain as framework to interact with OpenAI and format my prompt templates.
-
-### System Design
-```mermaid
----
-title: Jotdown class diagram 
----
-classDiagram
-    LLM <|-- Scribe
-    LLM <|-- Librarian
-    
-    class LLM {
-        #llm: ChatOpenAI
-        #template: ChatPromptTemplate
-        +ask()
-    }
-    class Scribe {
-        -MIN_WORDS: String
-        -system_msg: String
-        +record()
-        -clean()
-    }
-    class Librarian {
-        +store()
-        #retrieve()
-        +chat()
-        -vector_store
-        -create_db()
-        -create_chain()
-        -text_to_doc()
-    }
-    
-    IUserInput <|-- Editor
-    IUserInput <|-- CLI
-    CLI <|-- Librarian
-    Editor <|-- Scribe
-	  
-    class IUserInput {
-        +input()
-    }
-    class Editor {
-        -height: int
-        -width: int
-        -begin_y: int
-        -begin_x: int
-        -win_texteditor: _CursesWindow
-        -win_counter: _CursesWindow
-        +print()
-        +get()
-        +getkey()
-        +get_and_print()
-    }
-    class CLI {
-        +stream()
-    }
-```
 
 ## Improvements
 - [ ] use ncurses editor => text editing
