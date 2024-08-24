@@ -5,7 +5,11 @@ Jotdown is a note-taking app for devs. Everything is done in the terminal, durin
 ![](./assets/walkthrough.gif)
 
 ## How it works
+
 Jotdown is basically 2 features, taking notes and asking questions about the notes. Here is how both are implemented:
+
+![](./assets/design.png)
+
 
 1. __Taking notes__
     
